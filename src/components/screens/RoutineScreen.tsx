@@ -13,15 +13,7 @@ interface RoutineScreenProps {
 
 const weekDays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
-const weekData = [
-  { day: 'Seg', date: 13, isToday: false, completed: true, focus: 'Hidratação matinal' },
-  { day: 'Ter', date: 14, isToday: false, completed: true, focus: 'Café da manhã nutritivo' },
-  { day: 'Qua', date: 15, isToday: false, completed: true, focus: 'Caminhada leve' },
-  { day: 'Qui', date: 16, isToday: true, completed: false, focus: 'Seu primeiro passo' },
-  { day: 'Sex', date: 17, isToday: false, completed: false, focus: 'Preparação do jantar' },
-  { day: 'Sáb', date: 18, isToday: false, completed: false, focus: 'Dia de descanso ativo' },
-  { day: 'Dom', date: 19, isToday: false, completed: false, focus: 'Reflexão semanal' },
-];
+
 
 const timeSuggestions = [
   {
@@ -51,7 +43,53 @@ const timeSuggestions = [
 ];
 
 export function RoutineScreen({ user }: RoutineScreenProps) {
-  const [selectedDay, setSelectedDay] = useState(3); // Thursday
+  const [selectedDay, setSelectedDay] = useState(() => {
+    const today = new Date().getDay(); // 0 = Sunday, 1 = Monday, ...
+    // Adjust to 0 = Monday, 6 = Sunday to match our array
+    return today === 0 ? 6 : today - 1;
+  });
+
+  // Generate week data dynamically
+  const getWeekData = () => {
+    const today = new Date();
+    const currentDay = today.getDay(); // 0-6 (Sun-Sat)
+    const diffToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + diffToMonday);
+
+    const week = [];
+    const focuses = [
+      'Hidratação matinal',
+      'Café da manhã nutritivo',
+      'Caminhada leve',
+      'Seu primeiro passo',
+      'Preparação do jantar',
+      'Dia de descanso ativo',
+      'Reflexão semanal'
+    ];
+
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + i);
+
+      const isToday = date.toDateString() === today.toDateString();
+
+      week.push({
+        day: weekDays[i],
+        date: date.getDate(),
+        fullDate: date,
+        isToday: isToday,
+        completed: isToday ? false : i < (currentDay === 0 ? 6 : currentDay - 1), // Mark past days as completed for demo
+        focus: focuses[i]
+      });
+    }
+    return week;
+  };
+
+  const weekData = getWeekData();
+  const currentMonth = weekData[0].fullDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+  const formattedMonth = currentMonth.charAt(0).toUpperCase() + currentMonth.slice(1);
 
   return (
     <div className="min-h-screen bg-gradient-soft pb-24">
@@ -83,7 +121,7 @@ export function RoutineScreen({ user }: RoutineScreenProps) {
             <button className="p-2 rounded-lg hover:bg-muted transition-colors">
               <ChevronLeft size={20} className="text-text-muted" />
             </button>
-            <span className="font-semibold text-text-primary">Janeiro 2026</span>
+            <span className="font-semibold text-text-primary">{formattedMonth}</span>
             <button className="p-2 rounded-lg hover:bg-muted transition-colors">
               <ChevronRight size={20} className="text-text-muted" />
             </button>
@@ -100,8 +138,8 @@ export function RoutineScreen({ user }: RoutineScreenProps) {
                   selectedDay === index
                     ? "bg-primary"
                     : day.isToday
-                    ? "bg-accent"
-                    : "hover:bg-muted"
+                      ? "bg-accent"
+                      : "hover:bg-muted"
                 )}
               >
                 <span className={cn(
@@ -117,8 +155,8 @@ export function RoutineScreen({ user }: RoutineScreenProps) {
                   selectedDay === index
                     ? "text-primary-foreground"
                     : day.isToday
-                    ? "text-primary"
-                    : "text-text-primary"
+                      ? "text-primary"
+                      : "text-text-primary"
                 )}>
                   {day.date}
                 </span>
@@ -127,8 +165,8 @@ export function RoutineScreen({ user }: RoutineScreenProps) {
                   day.completed
                     ? "bg-primary"
                     : selectedDay === index
-                    ? "bg-primary-foreground/30"
-                    : "bg-transparent"
+                      ? "bg-primary-foreground/30"
+                      : "bg-transparent"
                 )} />
               </button>
             ))}
@@ -139,6 +177,7 @@ export function RoutineScreen({ user }: RoutineScreenProps) {
       {/* Selected Day Focus */}
       <div className="px-6 mb-6">
         <motion.div
+          key={selectedDay} // Animate when day changes
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
