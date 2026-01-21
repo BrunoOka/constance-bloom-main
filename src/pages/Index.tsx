@@ -95,7 +95,11 @@ function AppContent() {
       {activeTab === 'progress' && <ProgressScreen user={user} streak={user?.streak || 0} />}
       {activeTab === 'help' && <HelpScreen user={user} />}
 
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <BottomNav
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        showWeightLoss={user?.mainGoal === 'weightloss'}
+      />
     </div>
   );
 }
